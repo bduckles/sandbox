@@ -1,0 +1,39 @@
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(formattable)
+
+pay <- read.csv("Payable.csv", stringsAsFactors = TRUE)
+
+pay$Date <- as.Date(pay$Date, "%m/%d/%y")
+
+NMonth <- c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+NCat <- c("Dues", "Furniture", "Insurance", "Office", "Rent", "R&D", "Salary", "Software", "Travel", "Other")
+
+##Creates monthly paid by category (MonthPay) and MonthTot which is totals for each month
+MonthPay <- pay %>% 
+  mutate(monthly = month.name[month(Date)], day = day(Date))
+
+MonthPay$monthly <- factor(MonthPay$monthly, levels = NMonth)
+MonthPay$Category <- factor(MonthPay$Category, levels = NCat)
+
+MonthPay <- MonthPay%>%
+  group_by(monthly, Category) %>% 
+  summarise(Total = sum(Amount)) 
+
+MonthTot <- MonthPay %>% 
+  group_by(monthly) %>% 
+  summarise(Total = sum(Total)) 
+
+table(MonthPay$Category, MonthPay$monthly, 
+      dnn = "Total")
+
+
+TotPaidMonth <- function(paymonth) {
+  MonthPay %>%
+    filter(monthly == paymonth) %>%
+    summarise(Total = sum(Total))
+}
+
+TotPaidMonth("August")
